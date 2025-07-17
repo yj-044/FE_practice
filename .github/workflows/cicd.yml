@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  deploy: 
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,10 +18,13 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run:
-          echo "VITE_ID= ${{ secrets.VITE_ID }}" >> .env
-          echo "VITE_PW= ${{ secrets.VITE_PW }}" >> .env
+        run: npm ci
 
+      - name: Set environment variables
+        run: |
+          echo "VITE_ID=${{ secrets.VITE_ID }}" >> .env
+          echo "VITE_PW=${{ secrets.VITE_PW }}" >> .env
+            
       - name: Build project
         run: npm run build --mode production
 
@@ -36,12 +39,11 @@ jobs:
         run: aws s3 sync ./build s3://${{ secrets.S3_BUCKET_NAME }} --delete
 
       - name: CloudFront Invalidate Cache
-        run: 
-           aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}\
-            --paths "/*"
-
+        run: |
+          aws cloudfront create-invalidation \
+          --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+          --paths "/*"
         env:
-           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-           AWS_REGION: ap-northeast-2
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-northeast-2
